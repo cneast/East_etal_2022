@@ -6,8 +6,12 @@ Updated 5.13.22 by Chloe N. East
 
 The do and R files to replicate East et al. (2022) are included in the Code folder. The numbers on each file indicate the order in which they should be run. The top of each do file notes the Figures and Tables that will be created in the file.
 
-The Data folder includes several files to be used for replication. 
+The Data folder includes "policy_pop_cz_5_13_22" which has Commuting Zone by year information about 
+-- Enforcement Policies: SC, 287(g) agreements and E-Verify
+-- Total Population 
+-- the presence of a Sanctuary City Policy
+-- the Region of the country
+-- Housing Start information 
+-- Housing Price information 
 
-"287g_SC_EVerify_1_31_22_cpuma0010" is the enforcement data set we use that contains information about SC, 287(g) agreements and E-Verify. 
-
-See the paper for more details and sources. 
+See the paper for more details and sources. Due to restrictions on data sharing, we do not publish the ACS or TRAC data sets we use. The ACS data can be downloaded here: https://usa.ipums.org/usa/ Information about TRAC data licenses is here: https://trac.syr.edu/aboutTRACgeneral.html
