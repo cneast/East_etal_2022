@@ -6,6 +6,8 @@ Updated 5.13.22 by Chloe N. East
 
 The do and R files to replicate East et al. (2022) are included in the Code folder. The numbers on each file indicate the order in which they should be run. The top of each do file notes the Figures and Tables that will be created in the file.
 
+
+
 The Data folder includes 6 data sets. 
 
 "policy_pop_cz_5_13_22" which has Commuting Zone by year information about 
