@@ -13,5 +13,6 @@ The Data folder includes "policy_pop_cz_5_13_22" which has Commuting Zone by yea
 -- the Region of the country
 -- Housing Start information 
 -- Housing Price information 
+Additionally the excel file "CPUMA0010_summary" contains information on total CPUMA population counts. 
 
 See the paper for more details and sources. Due to restrictions on data sharing, we do not publish the ACS or TRAC data sets we use. The ACS data can be downloaded here: https://usa.ipums.org/usa/ Information about TRAC data licenses is here: https://trac.syr.edu/aboutTRACgeneral.html
