@@ -7,205 +7,26 @@ clear matrix
 set mem 500m 
 set more off 
 
-
-*********************************************************************
-/* DIRECTORY AND FILE NAMES: */  
-clear all 
-
-	if c(username)=="chloeeast" {  		// for Chloe's computer
-			global dir "/Users/chloeeast/Dropbox"	 	 	
-		} 
-		else{ 
-			if c(username)=="Chloe" {  		// for Chloe's laptop
-			global dir "/Users/Chloe/Dropbox"	 	 	
-			} 
-			} 
-		else{
-			if c(username)=="philipluck" { 		// for Chloe's laptop
-				global dir  "/Users/philipluck/Dropbox/Research/" 
-			}
-			}
-		else{
-			if c(username)=="hmansour" { 		// for Hani's desktop
-				global dir  "\Users\hmansour\Dropbox" 
-			}
-			}	
-		else{
-			if c(username)=="annielauriehines" { 	// for Annie's laptop
-				global dir  "/Users/annielauriehines/Dropbox" 
-			}
-			}			
-
-		else{
-			if c(username)=="ahines" { 	// for Annie's Sapper 
-				global dir  "/home/users/ahines.AD3"
-			}
-			}	
-********************************************************************* 
  
-macro define DATA     "$dir/Skills_demand_and_immigration/Data" 
-global resultslog ="Results/Logs"
+macro define DATA     
+global resultslog  
 
 
 local  today = c(current_date)
-cap log using "$resultslog/0_prepare_ACS_Sample_wages_`today'.log", replace
-
-
-	
-**************************************************
-*4a.i. Create Skill Measure of Occupation Using ACS dropping military and pa
-**************************************************
-	
-	use $DATA/acs.dta, clear  
-	* Age 20-64 
-	keep if age>=20 & age<=64
-	* Dropping people in group quarters:
-	keep if gq ==1 | gq==2 
-	*drop observations for which education is not observed:
-	drop if educd ==1
-	tab occ2010, nolabel
-	drop if occ2010==. | occ2010==9920 //	Unemployed, with No Work Experienoncite in the Last 5 Years or Earlier or Never Worked
-	 
-	keep if year ==2005 
-	 
-	gen lhs =0 
-	replace lhs =1 if educd <=61
-
-	gen hs_scol  = 0 
-
-	replace hs_scol =1 if   educd < 101
-
-	gen col = 0 
-	replace col =1 if  educd >=101
-
-	gen prof_deg= 0 
-	replace prof_deg = 1 if educd >101
-
-			gen sector =0
-
-		replace sector =1 if ind1990 <=32                  		/* AGRICULTURE, FORESTRY, AND FISHERIES */
-		replace sector =2 if ind1990 <=50 & sector ==0			/* MINING */
-		replace sector =3 if ind1990 <=60 & sector ==0			/* CONSTRUCTION */
-		replace sector =4 if ind1990 <=392 & sector ==0			/* MANUFACTURING */
-		replace sector =5 if ind1990 <=472 & sector ==0			/* Transportation & Utilites */
-		replace sector =6 if ind1990 <=691 & sector ==0			/* WHOLESALE, RETAIL */
-		replace sector =7 if ind1990 <=712 & sector ==0			/* FINANCE, INSURANCE, AND REAL ESTATE */
-		replace sector =8 if ind1990 <=760 & sector ==0			/* BUSINESS AND REPAIR SERVICES */
-		replace sector =9 if ind1990 <=810 & sector ==0			/* PERSONAL, ENTERTAINMENT AND RECREATION SERVICES */
-		replace sector =10 if ind1990 <=893 & sector ==0		/* Education and Health & Other Services */
-		replace sector =11 if ind1990 <=932 & sector ==0		/* PUBLIC ADMINISTRATION */
-		replace sector =12 if ind1990 <=940 & sector ==0		/* ACTIVE DUTY MILITARY */
-
-		drop if sector ==11 |  sector ==12
-
-	*Not enough variation across occupations using median:
-	collapse (mean) lhs hs_scol col prof_deg     [aweight=perwt] , by(occ2010)
-
-	gen hs = col- lhs
-
-	qui sum hs, d
-
-	gen lowskill =0 
-	replace lowskill =1 if hs<=r(p25)
-	gen midskill =0 
-	replace midskill=1 if hs>r(p25) & hs<r(p75) 
-	gen hiskill =0
-	replace hiskill =1 if hs>r(p75) 
-
-	_pctile col, percentiles(20 25 33 40 50 60 66 75 80 )
-
-	forvalues i= 1/9{
-		gen colptl_`i' = r(r`i')
-		}
-
-	*By Quartile
-	gen skilmpa_25qrt = 0
-	replace skilmpa_25qrt =1 if col<=colptl_2
-	gen skilmpa_50qrt = 0
-	replace skilmpa_50qrt =1 if col> colptl_2 & col<=colptl_5
-	gen skilmpa_75qrt = 0
-	replace skilmpa_75qrt =1 if col> colptl_5 & col<=colptl_8
-	gen skilmpa_100qrt = 0
-	replace skilmpa_100qrt =1 if col>colptl_8
-	
-	* Moving Window: 25 pp bins 
-	drop colptl_*
-	_pctile col, percentiles(5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 )
-
-	forvalues i= 1/19{
-		gen colptl_`i' = r(r`i')
-		}
-
-		sum col, d
-		gen colptl_0 = r(min)
-		sum col, d
-		gen colptl_20 = r(max)
-		
-	forvalues i= 5/20{
-		local j = `i'-5
-		local p = (`i')*5
-		gen skilmpa_`p'mw = (col>=colptl_`j' & col<=colptl_`i')
-		}
-		
-	* Bins of 10 pp, not moving window
-	forvalues i= 2(2)18{
-		local j = `i'-2
-		local p = (`i')*5
-		gen skilmpa_`p'b10 = (col>=colptl_`j' & col<colptl_`i')
-		}	
-		gen skilmpa_100b10 = (col>=colptl_18 & col<=colptl_20)
-
-		drop colptl_*
-		
-		sum skilmpa_*mw
-
-	
-	save "$DATA/temp_ACS_occ_edu_dropmilpa.dta", replace
-
-	
-
-	
-*******************************
-* 7. Prepare Populations estimates at CPUMA0010 level
-*******************************
-	import excel using "$DATA/CPUMA0010_summary.xls", clear firstrow
-	keep CPUMA0010 PUMA00_Pop00
-	rename CPUMA0010 cpuma0010
-	rename PUMA00_Pop00 cpuma0010_pop // based on 2000 puma coding population, population of CPUMA0010 in 2000
-	destring *, replace
-	duplicates drop
-
-	save $DATA/temp_pop, replace 
-	
-	
-	
-use $DATA/acs.dta, clear  
-cap drop _merge 
-
-
+cap log using "X", replace
 
 **************************************************
-*1. Construct Samples
+* CONSTURCT MAIN ANALYSIS DATA SET
 **************************************************
 * Age 20-64, 2005-2014
 keep if age>=20 & age<=64
 drop if year==2015
 keep if year>=2005 
 
-* Dropping people in group quarters (NOW DO THIS BELOW):
-* keep if gq ==1 | gq==2 
 gen ins=(gq ==3)
 
 sum perwt, d
 
-/* Create demographic groups:
--- all
--- citizen vs. noncitizen and foreign-born vs. US-born
--- for the following groups:
-- men vs. women
-- low edu, low edu hisp, high edu
--- likely undoc samples for men only
-*/
 
 gen all=1
 gen usb = 1 if bpl>=1 & bpl<=120 // born in US or US territory 
@@ -268,7 +89,7 @@ gen fb_hp80_men_ls = 1 if fb==1 & educd<=64 & yrimmig>1980 & hispan>0 & hispan<9
 
 
 **************************************************
-*2. Outcome Variables
+*Outcome Variables
 **************************************************
 gen     emp=empstat==1 if empstat!=0 
 
@@ -375,7 +196,7 @@ save $DATA/TEMP_acs_wage_aggregate.dta, replace
 
 
 **************************************************
-*3. Collapse to Puma, Year, Industry, and Occupation Level
+*Collapse to Puma, Year, Industry, and Occupation Level
 ************************************************** 
 use $DATA/TEMP_acs_wage_aggregate.dta, clear
 gen weight=perwt 
@@ -416,7 +237,7 @@ forvalues y = 2006/2014 {
 sum weight
 
 **************************************************
-*10. Merge occupation and industry charecteristics with ACS
+*Merge occupation and industry charecteristics with ACS and drop Military and Public Admin 
 **************************************************
 
 merge m:1 occ2010 using "$DATA/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
@@ -427,7 +248,7 @@ sum weight
 
 
 **************************************************
-*10. Collapse to Puma, Detailed Industry, and Year Level 
+*Collapse to Puma, Detailed Industry, and Year Level 
 **************************************************
 // generate occupation group specific outcome variables based on education-defined skill groups
 // occupational skill based on % college dropping mil/pa
@@ -455,8 +276,9 @@ keep   w2*   weight statefip sector ind cpuma0010 year
 
 save $DATA/TEMP_acs_wage_aggregate.dta , replace
 
-
-*Save Industry level version of dataset:
+**************************************************
+*Save Industry level version of dataset
+**************************************************
 use $DATA/TEMP_acs_wage_aggregate.dta , clear
 
 

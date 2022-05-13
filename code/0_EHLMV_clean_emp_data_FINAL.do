@@ -10,47 +10,24 @@ set mem 500m
 set more off 
 
 
-*********************************************************************
-/* DIRECTORY AND FILE NAMES: */  
-clear all 
-
-	if c(username)=="chloeeast" {  		// for Chloe's computer
-			global dir "/Users/chloeeast/Dropbox"	 	 	
-		} 
-		else{ 
-			if c(username)=="Chloe" {  		// for Chloe's laptop
-			global dir "/Users/Chloe/Dropbox"	 	 	
-			} 
-			} 
-		else{
-			if c(username)=="philipluck" { 		// for Chloe's laptop
-				global dir  "/Users/philipluck/Dropbox/Research/" 
-			}
-			}
-		else{
-			if c(username)=="hmansour" { 		// for Hani's desktop
-				global dir  "\Users\hmansour\Dropbox" 
-			}
-			}	
-		else{
-			if c(username)=="annielauriehines" { 	// for Annie's laptop
-				global dir  "/Users/annielauriehines/Dropbox" 
-			}
-			}			
-
-		else{
-			if c(username)=="ahines" { 	// for Annie's Sapper 
-				global dir  "/home/users/ahines.AD3"
-			}
-			}	
-********************************************************************* 
- 
-macro define DATA     "$dir/Skills_demand_and_immigration/Data" 
-global resultslog ="Results/Logs"
+macro define DATA     
+global resultslog  
 
 
 local  today = c(current_date)
-cap log using "$resultslog/0_prepare_ACS_Sample_emp_CNE_`today'.log", replace
+cap log using "X", replace
+
+*******************************
+*Prepare Populations estimates at CPUMA0010 level
+*******************************
+	import excel using "$DATA/CPUMA0010_summary.xls", clear firstrow
+	keep CPUMA0010 PUMA00_Pop00
+	rename CPUMA0010 cpuma0010
+	rename PUMA00_Pop00 cpuma0010_pop // based on 2000 puma coding population, population of CPUMA0010 in 2000
+	destring *, replace
+	duplicates drop
+
+	save $DATA/temp_pop, replace 
 	
 **************************************************
 *Create Skill Measure of Occupation Using ACS dropping military and pa
@@ -98,7 +75,6 @@ cap log using "$resultslog/0_prepare_ACS_Sample_emp_CNE_`today'.log", replace
 
 		drop if sector ==11 |  sector ==12
 
-	*Not enough variation across occupations using median:
 	collapse (mean) lhs hs_scol col prof_deg     [aweight=perwt] , by(occ2010)
 
 	gen hs = col- lhs
@@ -162,8 +138,9 @@ cap log using "$resultslog/0_prepare_ACS_Sample_emp_CNE_`today'.log", replace
 	
 	save "$DATA/temp_ACS_occ_edu_dropmilpa.dta", replace
 	
-	
-	* GENERATE OCCUPATION SKILL FIGURE FOR APPENDIX		
+*******************************
+*Generate Occupational Skill Distribution Figure	
+*******************************
 	use $DATA/acs.dta, clear  
 	* Age 20-64 
 	keep if age>=20 & age<=64
@@ -231,7 +208,7 @@ cap log using "$resultslog/0_prepare_ACS_Sample_emp_CNE_`today'.log", replace
 		
 		
 **************************************************
-*Tab what occupations and sectors are in diff skill bins and gender makeup
+*Tab what occupations and sectors are in diff skill bins and gender makeup for Appendix Figure
 **************************************************
 use $DATA/acs.dta, clear  
 * Age 20-64, 2005
@@ -275,12 +252,6 @@ gen `pob'_men_`edu'=(`pob'==1 & `edu'==1 & sex==1)
 
 
 merge m:1 occ2010 using "$DATA/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
-tab occ2010 merge_ACS_occ_edu, m // unemployed not matched and the two occupations that don't appear until later dates
-tab occ2010 merge_ACS_occ_edu, m nolabel 
-drop if merge_ACS_occ_edu~=3
-drop merge_ACS_occ_edu
-
-merge m:1 occ2010 using "$DATA/temp_ACS_occ_wage", gen(merge_ACS_occ_edu)
 tab occ2010 merge_ACS_occ_edu, m // unemployed not matched and the two occupations that don't appear until later dates
 tab occ2010 merge_ACS_occ_edu, m nolabel 
 drop if merge_ACS_occ_edu~=3
@@ -495,12 +466,27 @@ drop _merge
 tab hi_ind_male if emp_noncit_men_ls==1 [aw=perwt]
 tab hi_occ_male if emp_noncit_men_ls==1 [aw=perwt]
 
+**************************************************
+*Create Data Set with Number Undocumented in 2005
+**************************************************
+	use $DATA/acs.dta, clear  
+	keep if age>=20 & age<=64
+	keep if year==2005 
 
+	gen foreign_born = 1 if bpl>120 & bpl~=.
+	gen like_undoc2005 = 1 if citizen==3 & age<=45 & hispan>0 & hispan<9 & hispand!=450 & educ<=6 // Method II
+	gen pop =1
+		
+	collapse  (sum) like_undoc2005 foreign_born pop  ///
+	(max) statefip [fw=perwt]  , by(cpuma0010 )  
+	gen frac_undoc2_2005=like_undoc2005/pop
+	gen frac_foreign_born_2005=foreign_born/pop
+	drop like_undoc2005 pop foreign_born
+	label var frac_undoc2_2005 "Fraction Working Age Pop Undocumented in 2005, Method II"
+	label var frac_foreign_born_2005 "Fraction Working Age Pop Foreign Born in 2005"
 
+	save $DATA/temp_ACS_num_undoc, replace
 	
-	
-
-
 
 
 **************************************************
@@ -516,8 +502,6 @@ keep if age>=20 & age<=64
 drop if year==2015
 keep if year>=2005 
 
-* Dropping people in group quarters (NOW DO THIS BELOW):
-* keep if gq ==1 | gq==2 
 gen ins=(gq ==3)
 
 sum perwt, d
@@ -667,6 +651,7 @@ save $DATA/TEMP_acs_emp_aggregate.dta, replace
 *Collapse to Puma, Year, Industry, and Occupation Level
 ************************************************** 
 
+	
 set more off
 use $DATA/TEMP_acs_emp_aggregate.dta, clear
 tab bpl citizen 

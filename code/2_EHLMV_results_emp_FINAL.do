@@ -22,57 +22,23 @@ capture estimates clear
 set seed 10101
 pause off
 
-*********************************************************************
-/* DIRECTORY AND FILE NAMES: */ 
-clear all
-
-	if c(username)=="chloeeast" { 		// for Chloe's computer
-			global user  "/Users/chloeeast/Dropbox/Skills_demand_and_immigration/" 
-		}
-		else{
-			if c(username)=="Chloe" { 		// for Chloe's laptop
-				global user  "/Users/Chloe/Dropbox/Skills_demand_and_immigration/" 
- 
-			}
-			}
-		else{
-			if c(username)=="philipluck" { 		// for Phil's computer
-				global user  "/Users/philipluck/Dropbox/Research/Skills_demand_and_immigration/" 
- 
-			}
-			}
-					else{
-			if c(username)=="hmansour" { 		// for Hani's desktop
-				global user  "\Users\hmansour\Dropbox\Skills_demand_and_immigration/" 
- 
-			}
-			}
-			
-			else {
-			if c(username)=="annielauriehines" { 	// for Annie's laptop
-				global user  "/Users/annielauriehines/Dropbox/Skills_demand_and_immigration/"		
-						}
-						}
-*********************************************************************
-
-
 *set directory
 cd "$user"
 
-global data= "Data"
-global DATA= "Data"
-global resultsfolder = "$user/Submission/JOLE/Accepted files/tab_fig"
-global resultslog ="Results/Logs"
+global data 
+global DATA
+global resultsfolder 
+global resultslog  
 
 
 local  today = c(current_date)
-cap log using "$resultslog/1_EHLMV_results`today'.log", replace
+cap log using "X", replace
 
 set more off
 set scheme modern
 
 
-/* readin sanctuary city info
+* readin sanctuary city info
 preserve
 import excel using "$data/ice_policies/ice_policies.xlsx", firstrow clear
 keep county state fips month year policy_any
@@ -95,10 +61,9 @@ keep county state fips month year policy_any
 		
 	save "$data/ice_policies.dta", replace 
 restore 
-*/
 
 
-/* Build CZ to CPUMA Concordance:
+* Build CZ to CPUMA Concordance:
 use "$data/crosswalks/PUMA_CPUMA_CW.dta", clear
 replace puma00 = substr(trim(puma00),2,4)
 gen puma2000 = state00+puma00
@@ -116,9 +81,8 @@ sort cpuma
 replace af = af/revwtg
 drop revwtg
 save "$data/crosswalks/cw_cpuma2010_czone.dta", replace
-*/
 
-/** Readin Housing Start Data
+* Readin Housing Start Data
 preserve
 forvalues y = 2000/2014 {
 import excel using "$data/housing_starts.xlsx", sheet("`y'") clear first
@@ -145,7 +109,7 @@ drop if cty_fips==".."
 destring, replace
 
 rename countyfip countyfips
-merge m:1 statefip countyfips using "$data/County Level//county_population.dta"
+merge m:1 statefip countyfips using "$data/County Level/county_population.dta"
 tab year _merge
 drop if _merge==2
 drop _merge
@@ -173,10 +137,9 @@ gen d_`var'_0507=(mx_`var'07-mx_`var'05)/mx_`var'05
 
 save "$data/housing_starts.dta", replace
 restore
-*/
 
-/* Use policy variables constructed at the County and aggregate to the CZ  level
-*Start with annual enforcment data at the county level*
+
+* Use policy variables constructed at the County and aggregate to the CZ  level
 use "$data/County Level/287g_SC_EVerify_5_13_22.dta", clear
 
 drop everify_all everify_public
@@ -250,7 +213,7 @@ tab year _merge // nothing not matched in 2005-2011
 drop _merge
 
 *Merge in county pop
-merge m:1 statefip countyfips using "$data/County Level//county_population.dta"
+merge m:1 statefip countyfips using "$data/County Level/county_population.dta"
 tab year _merge // nothing not matched in 2005-2011
 keep if _merge==3
 drop _merge
@@ -266,7 +229,6 @@ collapse (rawsum) pop* (max) sanctuary_on (mean) region   HPIwith2000base  ///
 				task287g_jan state287g_jan SC_jan jail287g_frac task287g_frac state287g_frac SC_frac  [aweight = pop2000], ///
 				by(czone  year )
 				
-
 merge 1:1 czone year using "$data/housing_starts.dta"
 tab year _merge
 gen trend = year-2004
@@ -297,18 +259,16 @@ gen hpiboom_trend3=(d_mhpi_0006^3)*trend
 cap drop _merge
 gen hpiboom_trend=d_mhpi_0006*trend	 			
 save	"$data/County Level/policy_pop_cz_5_13_22.dta"	, replace		
-*/
-				
+			
 
 
 
-/******************************
+******************************
 * Use PUMA-Industry-Year Level ACS Data with Control Variables Merged in
 * Collapse to PUMA by Year Level
 * Then merge in PUMA to CZ condorance and re-collapse
 ******************************
 use  "$user/$data/acs_aggregate_emp.dta", clear
-saveold "$user/$data/acs_aggregate_emp.dta" , replace
 
 
 	gen sector =0
@@ -341,7 +301,7 @@ sum emp_* pop_*
 
 
 saveold "$data/acs_aggregate_emp_040422.dta" , replace
-*/
+
 
 ******************************************* *******************************************
 ******************************************* *******************************************
@@ -571,9 +531,6 @@ summ efixpop_all [aweight=pop2000]  if year==2005
 
 * Save data set to use for Callaway and Sant'Anna estimator
 save "data/EHLMV_forCS.dta", replace
-
-	; 
-	
 
 
 *******************************
@@ -1142,7 +1099,6 @@ label var d_shift_share_sample_hskill_0507 "Change High-Edu Bartik"
 
 keep if year==2005
 eststo clear
-// exclude housing prices
 qui xi: eststo: reg   min_year_SC  d_noncit_share_0507 d_noncit_men_share_0507 d_noncit_men_ls_share_0507 d_noncit_hp_men_ls_share_0507 d_task287g_frac_0507 d_jail287g_frac_0507    d_shift_share_sample_usb_0507 d_shift_share_sample_fb_0507 d_shift_share_sample_lskill_0507 d_shift_share_sample_hskill_0507   [aweight=pop2000]  
  estadd ysumm
 esttab, keep( d_noncit_share_0507 d_noncit_men_share_0507 d_noncit_men_ls_share_0507 d_noncit_hp_men_ls_share_0507 d_task287g_frac_0507 d_jail287g_frac_0507    d_shift_share_sample_usb_0507 d_shift_share_sample_fb_0507 d_shift_share_sample_lskill_0507 d_shift_share_sample_hskill_0507 ) ///
@@ -1164,11 +1120,7 @@ restore
 *********************************************************
 use "$data/acs_aggregate_emp.dta" , clear
 
-sort ind1990
-merge m:1 ind1990 using $data/acs_ind1990.dta
-sort   cpuma0010 year
 gen sector =0
-drop _merge
 merge m:1 ind1990 using $data/tradable1_BHVT.dta
 sort   cpuma0010 year
 
