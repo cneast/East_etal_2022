@@ -24,4 +24,6 @@ The excel file "CPUMA0010_summary" contains information on total CPUMA populatio
 
 "tradable1_BHVT.dta" contains information on the tradability of industries following Burstein, Ariel, Gordon Hanson, Lin Tian, and Jonathan Vogel, “Tradability and the Labor-Market Impact of Immigration: Theory and Evidence From the United States,” Econometrica, 2020, 88 (3), 1071–1112.
 
+"287g_SC_EVerify_5_13_22.dta" contains information on the presence of SC, 287(g) agreements and E-Verify by county and by year used to create the county maps. 
+
 See the paper for more details and sources. Due to restrictions on data sharing, we do not publish the ACS or TRAC data sets we use. The ACS data can be downloaded here: https://usa.ipums.org/usa/ Information about TRAC data licenses is here: https://trac.syr.edu/aboutTRACgeneral.html
