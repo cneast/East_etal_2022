@@ -6,34 +6,15 @@ clear mata
 set matsize 11000
 set maxvar 11000 
 
-
-*********************************************************************
-/* DIRECTORY AND FILE NAMES: */  
-clear all 
-
-	if c(username)=="chloeeast" {  		// for Chloe's computer
-			global dir "/Users/chloeeast/Dropbox"	 	 	
-		} 
-		else{ 
-			if c(username)=="Chloe" {  		// for Chloe's laptop
-			global dir "/Users/Chloe/Dropbox"	 	 	
-			} 
-			} 
-		else{
-			if c(username)=="philipluck" { 		// for Chloe's laptop
-				global dir  "/Users/philipluck/Dropbox/Research/" 
-			}
-			}
-********************************************************************* 
- 
-macro define DATA     "$dir/Skills_demand_and_immigration/Data/" 
-global resultsfolder = "$user/Submission/JOLE/Accepted files/tab_fig"
-macro define ENFOR     "$dir/Skills_demand_and_immigration/Data/" 
-
-/*ssc install spmap
+ssc install spmap
 ssc install shp2dta
-ssc install mif2dta*/
-use "$DATA/County Level/287g_SC_EVerify_5_13_22.dta" 
+ssc install mif2dta
+
+*set directory
+cd "$user"
+global data
+
+use "$data/287g_SC_EVerify_5_13_22.dta" 
 
 //shp2dta using cb_2016_us_county_5m,  database(usdb) coordinates(uscoord) genid(id) replace //Translates census map data into a dta file
 rename statefip STATEFIP

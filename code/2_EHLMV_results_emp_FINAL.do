@@ -26,13 +26,8 @@ pause off
 cd "$user"
 
 global data 
-global DATA
 global resultsfolder 
-global resultslog  
 
-
-local  today = c(current_date)
-cap log using "X", replace
 
 set more off
 set scheme modern
@@ -313,7 +308,7 @@ saveold "$data/acs_aggregate_emp_040422.dta" , replace
 use "$data/acs_aggregate_emp_040422.dta" , clear
 
 * MERGE IN NEW BARTIKS W SPLITS BY COUNTRY OF BIRTH
-merge m:1 statefip cpuma0010 year using $DATA/final_bartik_acs_cpuma0010_updated.dta
+merge m:1 statefip cpuma0010 year using $data/final_bartik_acs_cpuma0010_updated.dta
 sum year
 tab year _merge
 keep if _merge==3 // everything merged except 2015
@@ -1146,7 +1141,7 @@ collapse (sum) emp_* 	///
 						, by( year  cpuma0010 tradable2  statefip cpuma0010_pop SC_frac)
 						
 * MERGE IN NEW BARTIKS W SPLITS BY COUNTRY OF BIRTH
-merge m:1 cpuma0010 year using $DATA/final_bartik_acs_cpuma0010_updated.dta
+merge m:1 cpuma0010 year using $data/final_bartik_acs_cpuma0010_updated.dta
 sum year
 tab year _merge
 keep if _merge==3 // everything merged except 2015

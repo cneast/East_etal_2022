@@ -19,52 +19,9 @@ capture estimates clear
 set seed 10101
 pause off
 
-*********************************************************************
-/* DIRECTORY AND FILE NAMES: */ 
-clear all
-
-	if c(username)=="chloeeast" { 		// for Chloe's computer
-			global user  "/Users/chloeeast/Dropbox/Skills_demand_and_immigration/" 
-		}
-		else{
-			if c(username)=="Chloe" { 		// for Chloe's laptop
-				global user  "/Users/Chloe/Dropbox/Skills_demand_and_immigration/" 
- 
-			}
-			}
-		else{
-			if c(username)=="philipluck" { 		// for Phil's computer
-				global user  "/Users/philipluck/Dropbox/Research/Skills_demand_and_immigration/" 
- 
-			}
-			}
-					else{
-			if c(username)=="hmansour" { 		// for Hani's desktop
-				global user  "\Users\hmansour\Dropbox\Skills_demand_and_immigration/" 
- 
-			}
-			}
-			
-			else {
-			if c(username)=="annielauriehines" { 	// for Annie's laptop
-				global user  "/Users/annielauriehines/Dropbox/Skills_demand_and_immigration/"		
-						}
-						}
-*********************************************************************
-
-
 *set directory
 cd "$user"
-
-global data= "Data"
-global resultsfolder = "$user/Submission/JOLE/Accepted files/tab_fig"
-global resultslog ="Results/Logs"
-
-
-local  today = c(current_date)
-cap log using "$resultslog/1_EHLMV_results`today'.log", replace
-
-set more off
+global resultsfolder 
 set scheme modern
 
 

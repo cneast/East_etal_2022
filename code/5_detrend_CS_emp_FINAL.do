@@ -16,49 +16,13 @@ capture estimates clear
 set seed 10101
 pause off
 
-*********************************************************************
-/* DIRECTORY AND FILE NAMES: */ 
-clear all
-
-	if c(username)=="chloeeast" { 		// for Chloe's computer
-			global user  "/Users/chloeeast/Dropbox/Skills_demand_and_immigration/" 
-		}
-		else{
-			if c(username)=="Chloe" { 		// for Chloe's laptop
-				global user  "/Users/Chloe/Dropbox/Skills_demand_and_immigration/" 
- 
-			}
-			}
-		else{
-			if c(username)=="philipluck" { 		// for Phil's computer
-				global user  "/Users/philipluck/Dropbox/Research/Skills_demand_and_immigration/" 
- 
-			}
-			}
-					else{
-			if c(username)=="hmansour" { 		// for Hani's desktop
-				global user  "\Users\hmansour\Dropbox\Skills_demand_and_immigration/" 
- 
-			}
-			}
-			
-			else {
-			if c(username)=="annielauriehines" { 	// for Annie's laptop
-				global user  "/Users/annielauriehines/Dropbox/Skills_demand_and_immigration/"		
-						}
-						}
-*********************************************************************
-
-
 *set directory
 cd "$user"
+global data
 
-global data= "Data"
-global resultslog ="Results/Logs"
+
 use "$data/EHLMV_forCS.dta"
 
-*Generate the effyear variable for CA Estimator
-*for first year that SC_frac > 0
 
 drop if SC_frac==.
 gen SC_dummy = 0

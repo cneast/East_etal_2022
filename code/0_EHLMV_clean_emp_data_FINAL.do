@@ -10,30 +10,25 @@ set mem 500m
 set more off 
 
 
-macro define DATA     
-global resultslog  
-
-
-local  today = c(current_date)
-cap log using "X", replace
+macro define data     
 
 *******************************
 *Prepare Populations estimates at CPUMA0010 level
 *******************************
-	import excel using "$DATA/CPUMA0010_summary.xls", clear firstrow
+	import excel using "$data/CPUMA0010_summary.xls", clear firstrow
 	keep CPUMA0010 PUMA00_Pop00
 	rename CPUMA0010 cpuma0010
 	rename PUMA00_Pop00 cpuma0010_pop // based on 2000 puma coding population, population of CPUMA0010 in 2000
 	destring *, replace
 	duplicates drop
 
-	save $DATA/temp_pop, replace 
+	save $data/temp_pop, replace 
 	
 **************************************************
 *Create Skill Measure of Occupation Using ACS dropping military and pa
 **************************************************
 	
-	use $DATA/acs.dta, clear  
+	use $data/acs.dta, clear  
 	* Age 20-64 
 	keep if age>=20 & age<=64
 	* Dropping people in group quarters:
@@ -136,12 +131,12 @@ cap log using "X", replace
 		sum skilmpa_*mw
 
 	
-	save "$DATA/temp_ACS_occ_edu_dropmilpa.dta", replace
+	save "$data/temp_ACS_occ_edu_dropmilpa.dta", replace
 	
 *******************************
 *Generate Occupational Skill Distribution Figure	
 *******************************
-	use $DATA/acs.dta, clear  
+	use $data/acs.dta, clear  
 	* Age 20-64 
 	keep if age>=20 & age<=64
 	* Dropping people in group quarters:
@@ -210,7 +205,7 @@ cap log using "X", replace
 **************************************************
 *Tab what occupations and sectors are in diff skill bins and gender makeup for Appendix Figure
 **************************************************
-use $DATA/acs.dta, clear  
+use $data/acs.dta, clear  
 * Age 20-64, 2005
 keep if age>=20 & age<=64
 keep if year==2005 
@@ -251,7 +246,7 @@ gen `pob'_men_`edu'=(`pob'==1 & `edu'==1 & sex==1)
 }
 
 
-merge m:1 occ2010 using "$DATA/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
+merge m:1 occ2010 using "$data/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
 tab occ2010 merge_ACS_occ_edu, m // unemployed not matched and the two occupations that don't appear until later dates
 tab occ2010 merge_ACS_occ_edu, m nolabel 
 drop if merge_ACS_occ_edu~=3
@@ -469,7 +464,7 @@ tab hi_occ_male if emp_noncit_men_ls==1 [aw=perwt]
 **************************************************
 *Create Data Set with Number Undocumented in 2005
 **************************************************
-	use $DATA/acs.dta, clear  
+	use $data/acs.dta, clear  
 	keep if age>=20 & age<=64
 	keep if year==2005 
 
@@ -485,7 +480,7 @@ tab hi_occ_male if emp_noncit_men_ls==1 [aw=perwt]
 	label var frac_undoc2_2005 "Fraction Working Age Pop Undocumented in 2005, Method II"
 	label var frac_foreign_born_2005 "Fraction Working Age Pop Foreign Born in 2005"
 
-	save $DATA/temp_ACS_num_undoc, replace
+	save $data/temp_ACS_num_undoc, replace
 	
 
 
@@ -493,7 +488,7 @@ tab hi_occ_male if emp_noncit_men_ls==1 [aw=perwt]
 * CONSTURCT MAIN ANALYSIS DATA SET
 **************************************************
 
-use $DATA/acs.dta, clear  
+use $data/acs.dta, clear  
 cap drop _merge 
 
 
@@ -644,7 +639,7 @@ gen nlf_`g' = (empstat==3) if `g'==1 & (gq ==1 | gq==2)
 }
 
 
-save $DATA/TEMP_acs_emp_aggregate.dta, replace
+save $data/TEMP_acs_emp_aggregate.dta, replace
 
 
 **************************************************
@@ -653,7 +648,7 @@ save $DATA/TEMP_acs_emp_aggregate.dta, replace
 
 	
 set more off
-use $DATA/TEMP_acs_emp_aggregate.dta, clear
+use $data/TEMP_acs_emp_aggregate.dta, clear
 tab bpl citizen 
 gen weight=perwt 
 keep weight  pop_*     statefip perwt cpuma0010 year 
@@ -661,9 +656,9 @@ keep weight  pop_*     statefip perwt cpuma0010 year
 collapse   (sum)   pop_*    ///
  (max) statefip [fw=perwt]  , by(cpuma0010 year  ) 
  sum
-	save "$DATA/temp_ACS_pop_allyears", replace
+	save "$data/temp_ACS_pop_allyears", replace
 
- use $DATA/TEMP_acs_aggregate.dta, clear
+ use $data/TEMP_acs_aggregate.dta, clear
 gen weight=perwt 
 keep weight emp_* ins_*  hrs_* hrsc_*  hours_* age_* yrsusa1_* educd_* hp_* un_* nlf_* statefip perwt cpuma0010 year ind1990 occ2010
 
@@ -673,13 +668,13 @@ preserve
 keep if year==`y'
 collapse  (rawsum) weight (mean) hrs_* hrsc_* age_* yrsusa1_* educd_* hp_* (sum) un_* nlf_* emp_* ins_* hours_*   ///
  (max) statefip [fw=perwt]  , by(cpuma0010 year ind1990 occ2010) fast
-	save "$DATA/TEMP_acs_emp_aggregate_ind_occ_`y'", replace
+	save "$data/TEMP_acs_emp_aggregate_ind_occ_`y'", replace
 restore
 }
 
-use "$DATA/TEMP_acs_emp_aggregate_ind_occ_2005", clear
+use "$data/TEMP_acs_emp_aggregate_ind_occ_2005", clear
 forvalues y = 2006/2014 {
-append using "$DATA/TEMP_acs_emp_aggregate_ind_occ_`y'"
+append using "$data/TEMP_acs_emp_aggregate_ind_occ_`y'"
 }
 
  
@@ -690,7 +685,7 @@ sum weight
 *Merge occupation and industry charecteristics with ACS and drop Military and Public Admin 
 **************************************************
 
-merge m:1 occ2010 using "$DATA/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
+merge m:1 occ2010 using "$data/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
 drop if merge_ACS_occ_edu~=3
 drop merge_ACS_occ_edu
 
@@ -730,13 +725,13 @@ preserve
 keep if year==`y'
 collapse  (sum) un_* nlf_* emp_*  weight  ///
  (max) statefip  , by(cpuma0010 year ind1990 ) fast
-	save "$DATA/TEMP_acs_emp_aggregate_ind_`y'", replace
+	save "$data/TEMP_acs_emp_aggregate_ind_`y'", replace
 restore
 }
 
-use "$DATA/TEMP_acs_emp_aggregate_ind_2005", clear
+use "$data/TEMP_acs_emp_aggregate_ind_2005", clear
 forvalues y = 2006/2014 {
-append using "$DATA/TEMP_acs_emp_aggregate_ind_`y'"
+append using "$data/TEMP_acs_emp_aggregate_ind_`y'"
 }
 
  
@@ -746,32 +741,32 @@ label var ind1990 "Consistent Industry ID"
 
 
 * Merge in Other Demographic Variables
-merge m:1 statefip cpuma0010 using $DATA/temp_ACS_num_undoc
+merge m:1 statefip cpuma0010 using $data/temp_ACS_num_undoc
 sum year
 tab year _merge
 keep if _merge==3  // everything merged 
 drop _merge 
 
-merge m:1 statefip cpuma0010 year using "$DATA/temp_ACS_pop_allyears"
+merge m:1 statefip cpuma0010 year using "$data/temp_ACS_pop_allyears"
 tab year _merge
 keep if _merge==3  // everything merged 
 drop _merge 
 
-merge m:1 cpuma0010  using $DATA/temp_pop 
+merge m:1 cpuma0010  using $data/temp_pop 
 sum year
 tab year _merge
 keep if _merge==3  // almost everything merged except 2015 and <2005
 drop _merge 
   
 
-merge m:1 cpuma0010 year using $DATA/deportations_cpuma0010.dta
+merge m:1 cpuma0010 year using $data/deportations_cpuma0010.dta
 sum year
 	tab year _merge
 	tab statefip _merge
 	*keep if _merge==3
 	drop _merge
 	
-merge m:1 cpuma0010 year using $DATA/detainers_cpuma0010.dta
+merge m:1 cpuma0010 year using $data/detainers_cpuma0010.dta
 sum year
 	tab year _merge
 	tab statefip _merge
@@ -783,7 +778,7 @@ sum
 
 compress
  
-save $DATA/acs_aggregate_emp.dta , replace
+save $data/acs_aggregate_emp.dta , replace
 
 
 

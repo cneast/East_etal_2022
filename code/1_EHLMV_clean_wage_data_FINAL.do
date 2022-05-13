@@ -8,12 +8,7 @@ set mem 500m
 set more off 
 
  
-macro define DATA     
-global resultslog  
-
-
-local  today = c(current_date)
-cap log using "X", replace
+macro define data     
 
 **************************************************
 * CONSTURCT MAIN ANALYSIS DATA SET
@@ -109,7 +104,7 @@ gen     emp=empstat==1 if empstat!=0
 
 	
 * Adjust income vars to real 2014 dollars 
-merge m:1 year using "$DATA/cpi"
+merge m:1 year using "$data/cpi"
 	drop if _merge<3
 	drop _merge 
 
@@ -191,14 +186,14 @@ foreach g in `demog_list' {
 
 
 
-save $DATA/TEMP_acs_wage_aggregate.dta, replace
+save $data/TEMP_acs_wage_aggregate.dta, replace
 
 
 
 **************************************************
 *Collapse to Puma, Year, Industry, and Occupation Level
 ************************************************** 
-use $DATA/TEMP_acs_wage_aggregate.dta, clear
+use $data/TEMP_acs_wage_aggregate.dta, clear
 gen weight=perwt 
 keep weight   w2*   statefip perwt cpuma0010 year ind1990 occ2010
 
@@ -225,13 +220,13 @@ keep if year==`y'
 cap replace perwt = round(perwt)
 collapse  (rawsum) weight (mean)  w2*    ///
  (max) statefip [fw=perwt]  ,  by(cpuma0010 year ind1990 occ2010 sector) fast
-	save "$DATA/TEMP_acs_wage_aggregate_`y'", replace
+	save "$data/TEMP_acs_wage_aggregate_`y'", replace
 restore
 }
 
-use "$DATA/TEMP_acs_wage_aggregate_2005", clear
+use "$data/TEMP_acs_wage_aggregate_2005", clear
 forvalues y = 2006/2014 {
-	append using "$DATA/TEMP_acs_wage_aggregate_`y'"
+	append using "$data/TEMP_acs_wage_aggregate_`y'"
 	}
 
 sum weight
@@ -240,7 +235,7 @@ sum weight
 *Merge occupation and industry charecteristics with ACS and drop Military and Public Admin 
 **************************************************
 
-merge m:1 occ2010 using "$DATA/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
+merge m:1 occ2010 using "$data/temp_ACS_occ_edu_dropmilpa", gen(merge_ACS_occ_edu)
 drop if merge_ACS_occ_edu~=3
 drop merge_ACS_occ_edu
 
@@ -274,12 +269,12 @@ sum year
 
 keep   w2*   weight statefip sector ind cpuma0010 year
 
-save $DATA/TEMP_acs_wage_aggregate.dta , replace
+save $data/TEMP_acs_wage_aggregate.dta , replace
 
 **************************************************
 *Save Industry level version of dataset
 **************************************************
-use $DATA/TEMP_acs_wage_aggregate.dta , clear
+use $data/TEMP_acs_wage_aggregate.dta , clear
 
 
 	forvalues y = 2005/2014 {
@@ -287,12 +282,12 @@ use $DATA/TEMP_acs_wage_aggregate.dta , clear
 	keep if year==`y'
 	collapse  (mean)  w2*  (sum)  weight     ///
 	 (max) statefip  , by(cpuma0010 year sec ind ) fast
-		save "$DATA/TEMP_acs_wage_aggregate_ind_`y'", replace
+		save "$data/TEMP_acs_wage_aggregate_ind_`y'", replace
 	restore
 	}
-	use "$DATA/TEMP_acs_wage_aggregate_ind_2005", clear
+	use "$data/TEMP_acs_wage_aggregate_ind_2005", clear
 	forvalues y = 2006/2014 {
-	append using "$DATA/TEMP_acs_wage_aggregate_ind_`y'"
+	append using "$data/TEMP_acs_wage_aggregate_ind_`y'"
 cap sum *hours*
 	}
 	label var weight "ACS Population Estimate by Cell"
@@ -307,19 +302,19 @@ cap sum *hours*
 
 * Merge in Other Demographic Variables
 * Merge in Policy/Control Variables
-merge m:1 statefip cpuma0010 using $DATA/temp_ACS_num_undoc
+merge m:1 statefip cpuma0010 using $data/temp_ACS_num_undoc
 sum year
 tab year _merge
 keep if _merge==3  // everything merged 
 drop _merge 
 
 
-merge m:1 statefip cpuma0010 year using "$DATA/temp_ACS_num_undoc_allyears"
+merge m:1 statefip cpuma0010 year using "$data/temp_ACS_num_undoc_allyears"
 tab year _merge
 keep if _merge==3  // everything merged 
 drop _merge 
 
-merge m:1 cpuma0010  using $DATA/temp_pop 
+merge m:1 cpuma0010  using $data/temp_pop 
 sum year
 tab year _merge
 keep if _merge==3  // almost everything merged except 2015 and <2005
@@ -331,14 +326,14 @@ cap sum *hours*
 
 	compress
 
-save $DATA/acs_aggregate_wage_ind.dta , replace
+save $data/acs_aggregate_wage_ind.dta , replace
 
 
 
 
 	
 * Save main wage dataset	
-use  $DATA/TEMP_acs_wage_aggregate.dta , clear
+use  $data/TEMP_acs_wage_aggregate.dta , clear
 
 	
 forvalues y = 2005/2014 {
@@ -346,13 +341,13 @@ preserve
 keep if year==`y'
 collapse  (mean)  w2*  (sum)  weight    ///
  (max) statefip  , by(cpuma0010 year  ) fast
-	save "$DATA/TEMP_acs_aggregate_ind_`y'", replace
+	save "$data/TEMP_acs_aggregate_ind_`y'", replace
 restore
 }
 
-use "$DATA/TEMP_acs_aggregate_ind_2005", clear
+use "$data/TEMP_acs_aggregate_ind_2005", clear
 forvalues y = 2006/2014 {
-append using "$DATA/TEMP_acs_aggregate_ind_`y'"
+append using "$data/TEMP_acs_aggregate_ind_`y'"
 }
 
  
@@ -361,19 +356,19 @@ label var cpuma0010 "Consistent PUMA ID"
 
 
 * Merge in Other Demographic Variables
-merge m:1 statefip cpuma0010 using $DATA/temp_ACS_num_undoc
+merge m:1 statefip cpuma0010 using $data/temp_ACS_num_undoc
 sum year
 tab year _merge
 keep if _merge==3  // everything merged 
 drop _merge 
 
 
-merge m:1 statefip cpuma0010 year using "$DATA/temp_ACS_num_undoc_allyears"
+merge m:1 statefip cpuma0010 year using "$data/temp_ACS_num_undoc_allyears"
 tab year _merge
 keep if _merge==3  // everything merged 
 drop _merge 
 
-merge m:1 cpuma0010  using $DATA/temp_pop 
+merge m:1 cpuma0010  using $data/temp_pop 
 sum year
 tab year _merge
 keep if _merge==3  // almost everything merged except 2015 and <2005
@@ -382,7 +377,7 @@ drop _merge
 
 compress
  
-save $DATA/acs_aggregate_wage.dta , replace
+save $data/acs_aggregate_wage.dta , replace
 
 
 

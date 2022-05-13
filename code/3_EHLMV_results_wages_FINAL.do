@@ -21,52 +21,12 @@ capture estimates clear
 set seed 10101
 pause off
 
-*********************************************************************
-/* DIRECTORY AND FILE NAMES: */ 
-clear all
-
-	if c(username)=="chloeeast" { 		// for Chloe's computer
-			global user  "/Users/chloeeast/Dropbox/Skills_demand_and_immigration/" 
-		}
-		else{
-			if c(username)=="Chloe" { 		// for Chloe's laptop
-				global user  "/Users/Chloe/Dropbox/Skills_demand_and_immigration/" 
- 
-			}
-			}
-		else{
-			if c(username)=="philipluck" { 		// for Phil's computer
-				global user  "/Users/philipluck/Dropbox/Research/Skills_demand_and_immigration/" 
- 
-			}
-			}
-					else{
-			if c(username)=="hmansour" { 		// for Hani's desktop
-				global user  "\Users\hmansour\Dropbox\Skills_demand_and_immigration/" 
- 
-			}
-			}
-			
-			else {
-			if c(username)=="annielauriehines" { 	// for Annie's laptop
-				global user  "/Users/annielauriehines/Dropbox/Skills_demand_and_immigration/"		
-						}
-						}
-*********************************************************************
-
-*install modern scheme
-net install scheme-modern, from("https://raw.githubusercontent.com/mdroste/stata-scheme-modern/master/")
-
 *set directory
 cd "$user"
-global data= "Data"
-global DATA= "Data"
-global resultsfolder = "$user/Submission/JOLE/Accepted files/tab_fig"
-global resultslog ="Results/Logs"
 
+global data 
+global resultsfolder 
 
-local  today = c(current_date)
-cap log using "$resultslog/1_EHLMV_wage_results`today'.log", replace
 
 set more off
 set scheme modern
@@ -74,18 +34,16 @@ set scheme modern
 
 
 
-******************************************* *******************************************
-******************************************* *******************************************
-* ******************  USE COUNTY LEVEL POLICY AND POP DATA   * ************************ 
-******************************************* *******************************************
-******************************************* *******************************************/
+******************************
+* Use PUMA-Year Level ACS Data and Collapse to CZ level and Merge in Control Variables
+******************************
 
 *merge to ACS employment Data:	
 use "$data/acs_aggregate_wage.dta" , clear
 
 * DROP OLD BARTIKS AND MERGE IN NEW ONES W SPLITS BY COUNTRY OF BIRTH
 drop shift_share_sample*
-merge m:1 statefip cpuma0010 year using $DATA/final_bartik_acs_cpuma0010_updated.dta
+merge m:1 statefip cpuma0010 year using $data/final_bartik_acs_cpuma0010_updated.dta
 sum year
 tab year _merge
 keep if _merge==3 // everything merged except 2015
@@ -631,17 +589,14 @@ foreach g in  `grouplist' {
 *********************************************************
 
 use $data/acs_aggregate_wage_ind.dta , clear
-sort ind1990
-merge m:1 ind1990 using $data/acs_ind1990.dta
-sort   cpuma0010 year
-drop _merge
+
 merge m:1 ind1990 using $data/tradable1_BHVT.dta
 sort   cpuma0010 year
 
 * DROP OLD BARTIKS AND MERGE IN NEW ONES W SPLITS BY COUNTRY OF BIRTH
 drop _merge  
 drop shift_share_sample*
-merge m:1 statefip cpuma0010 year using $DATA/final_bartik_acs_cpuma0010_updated.dta
+merge m:1 statefip cpuma0010 year using $data/final_bartik_acs_cpuma0010_updated.dta
 sum year
 tab year _merge
 keep if _merge==3 // everything merged except 2015
